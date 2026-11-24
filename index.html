@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoodSpace</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f7fb;
+  color: #28334a;
+}
+header {
+  background: linear-gradient(135deg, #8ecae6, #cdb4db);
+  padding: 35px 20px;
+  text-align: center;
+  color: #fff;
+}
+header h1 { font-size: 36px; margin: 0 0 10px; }
+header p { margin: 0; }
+main {
+  max-width: 850px;
+  margin: 25px auto;
+  padding: 15px;
+}
+.card {
+  background: white;
+  border-radius: 18px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.05);
+}
+h2 { color: #5b668c; }
+.moods {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+.mood {
+  background: #f3f5fa;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  padding: 15px 5px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 25px;
+}
+.mood span {
+  display: block;
+  font-size: 12px;
+  margin-top: 8px;
+}
+.mood.selected {
+  border-color: #8ecae6;
+  background: #e8f5fb;
+}
+textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 15px;
+  border: 1px solid #dce3ed;
+  border-radius: 12px;
+  font-size: 15px;
+  resize: vertical;
+}
+button.save {
+  background: #7189d6;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 20px;
+  cursor: pointer;
+  font-size: 15px;
+  margin-top: 12px;
+}
+button.save:hover { background: #5c74c2; }
+.entry {
+  border-bottom: 1px solid #eee;
+  padding: 15px 0;
+}
+.entry:last-child { border-bottom: none; }
+.date { color: #8490a5; font-size: 13px; }
+.suggestion {
+  background: #edf7f6;
+  border-radius: 12px;
+  padding: 15px;
+}
+footer {
+  text-align: center;
+  color: #8792a6;
+  font-size: 12px;
+  padding: 20px;
+}
+@media(max-width:500px) {
+  .moods { grid-template-columns: repeat(3,1fr); }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🌈 MoodSpace</h1>
+  <p>Your feelings matter. Take a moment for yourself.</p>
+</header>
+
+<main>
+  <section class="card">
+    <h2>How are you feeling today?</h2>
+    <p>Chọn cảm xúc mà bạn muốn ghi nhận.</p>
+
+    <div class="moods">
+      <button class="mood" data-mood="Vui">😄<span>Vui</span></button>
+      <button class="mood" data-mood="Bình yên">😌<span>Bình yên</span></button>
+      <button class="mood" data-mood="Bình thường">😐<span>Bình thường</span></button>
+      <button class="mood" data-mood="Lo lắng">😟<span>Lo lắng</span></button>
+      <button class="mood" data-mood="Buồn">😔<span>Buồn</span></button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>📝 Daily Reflection</h2>
+    <p>Hôm nay bạn muốn ghi lại điều gì?</p>
+    <textarea id="note" placeholder="Viết suy nghĩ hoặc trải nghiệm của bạn tại đây..."></textarea>
+    <button class="save" onclick="saveEntry()">Save my entry</button>
+  </section>
+
+  <section class="card">
+    <h2>🌿 Calm Corner</h2>
+    <div class="suggestion">
+      <p><strong>Thử dành một phút cho bản thân:</strong></p>
+      <p>Ngồi thoải mái, thả lỏng vai, hít thở tự nhiên và tạm rời khỏi công việc đang làm.</p>
+      <p>Không cần phải giải quyết mọi thứ ngay lúc này.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>📅 My Mood History</h2>
+    <div id="history"></div>
+  </section>
+</main>
+
+<footer>
+  MoodSpace is a self-reflection tool, not a medical or diagnostic service.
+  Entries are stored locally in this browser.
+</footer>
+
+<script>
+let selectedMood = "";
+
+document.querySelectorAll(".mood").forEach(button => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".mood").forEach(b =>
+      b.classList.remove("selected")
+    );
+    button.classList.add("selected");
+    selectedMood = button.dataset.mood;
+  });
+});
+
+function saveEntry() {
+  if (!selectedMood) {
+    alert("Please select a mood first!");
+    return;
+  }
+
+  const note = document.getElementById("note").value;
+  const entries = JSON.parse(localStorage.getItem("moodspace") || "[]");
+
+  entries.unshift({
+    mood: selectedMood,
+    note: note,
+    date: new Date().toLocaleString("vi-VN")
+  });
+
+  localStorage.setItem("moodspace", JSON.stringify(entries));
+
+  document.getElementById("note").value = "";
+  selectedMood = "";
+
+  document.querySelectorAll(".mood").forEach(b =>
+    b.classList.remove("selected")
+  );
+
+  showHistory();
+  alert("Your entry has been saved!");
+}
+
+function showHistory() {
+  const entries = JSON.parse(localStorage.getItem("moodspace") || "[]");
+  const history = document.getElementById("history");
+
+  if (entries.length === 0) {
+    history.innerHTML = "<p>Chưa có nhật ký. Hãy ghi nhận cảm xúc đầu tiên!</p>";
+    return;
+  }
+
+  history.innerHTML = entries.map(entry => `
+    <div class="entry">
+      <div class="date">${entry.date}</div>
+      <p><strong>${escapeHTML(entry.mood)}</strong></p>
+      <p>${escapeHTML(entry.note || "Không có ghi chú.")}</p>
+    </div>
+  `).join("");
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[char]));
+}
+
+showHistory();
+</script>
+</body>
+</html>
